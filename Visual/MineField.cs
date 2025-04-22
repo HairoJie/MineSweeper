@@ -1,6 +1,6 @@
 ﻿namespace MineSweeper.Visual
 {
-    internal class MineField
+	public class MineField
     {
         private readonly string[] ColumnHeaders;
 
@@ -8,7 +8,7 @@
 
         private readonly string[] RowHeaders;
 
-        internal MineField(int gridSize, int mineCount)
+		public MineField(int gridSize, int mineCount)
         {
             GridSize = gridSize;
             MineCount = mineCount;
@@ -20,7 +20,10 @@
 
             InitializeHeaders(gridSize);
             InitializeGridMine();
-        }
+
+			PlantMines(mineCount);
+
+		}
 
         public int GridSize { get; }
 
@@ -44,6 +47,60 @@
                 }
             }
         }
+
+        private void UpdateField()
+        {
+			for (int i = 0; i < GridSize; i++)
+            {
+				for (int j = 0; j < GridSize; j++)
+                {
+					if (Mines[i, j])
+                    {
+                        Grid[i, j] = '*';
+					}
+					else
+                    {
+                        Grid[i, j] = ' ';
+					}
+				}
+			}
+		}
+        
+        public bool DigField(int rowPosition, int colPosition)
+        {
+            if (IsMine(rowPosition, colPosition))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IsMine(int rowPosition, int colPosition)
+        {
+            return Mines[rowPosition, colPosition];
+        }
+
+        private void PlantMines(int mineCount)
+        {
+			var random = new Random();
+			int plantedMines = 0;
+
+			while (plantedMines < mineCount)
+			{
+				int colPosition = random.Next(GridSize);
+				int rowPosition = random.Next(GridSize);
+
+                var isMinePlanted = Mines[rowPosition, colPosition];
+				if (isMinePlanted)
+				{
+					continue;
+				}
+
+				Mines[rowPosition, colPosition] = true;
+				plantedMines++;
+            }
+		}
 
         private void InitializeGridMine()
         {
