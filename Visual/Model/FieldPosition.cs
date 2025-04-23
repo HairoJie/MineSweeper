@@ -1,4 +1,6 @@
-﻿namespace MineSweeper.Visual.Model
+﻿using MineSweeper.Control.Helper;
+
+namespace MineSweeper.Visual.Model
 {
     public struct FieldPosition
     {
@@ -9,6 +11,7 @@
         }
 
         public int RowPosition { get; }
+
         public int ColPosition { get; }
-    }
+	}
 }

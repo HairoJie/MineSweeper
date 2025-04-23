@@ -1,126 +1,191 @@
 ﻿namespace MineSweeper.Visual
 {
 	public class MineField
-    {
-        private readonly string[] ColumnHeaders;
+	{
+		private readonly string[] ColumnHeaders;
 
-        private readonly char[,] Grid;
+		private readonly string[,] Grid;
 
-        private readonly string[] RowHeaders;
+		private readonly string[] RowHeaders;
 
 		public MineField(int gridSize, int mineCount)
-        {
-            GridSize = gridSize;
-            MineCount = mineCount;
-            Grid = new char[gridSize, gridSize];
-            Mines = new bool[gridSize, gridSize];
+		{
+			GridSize = gridSize;
+			MineCount = mineCount;
+			Grid = new string[gridSize, gridSize];
 
-            RowHeaders = new string[gridSize];
-            ColumnHeaders = new string[gridSize];
+			RowHeaders = new string[gridSize];
+			ColumnHeaders = new string[gridSize];
 
-            InitializeHeaders(gridSize);
-            InitializeGridMine();
+			Field = new FieldCell[gridSize, gridSize];
 
-			PlantMines(mineCount);
+			InitializeHeaders(gridSize);
+			InitializeBoard();
+			InitializeGrid();
 
+			PlaceMines();
+			CalculateAdjacentMines();
 		}
 
-        public int GridSize { get; }
+		public FieldCell[,] Field { get; }
 
-        public int MineCount { get; }
+		public int GridSize { get; }
 
-        public bool[,] Mines { get; }
+		public int MineCount { get; }
 
-        public void Display()
-        {
-            // Print row headers
-            Console.Write($"  {string.Join(" ", RowHeaders)}");
+		public void CalculateAdjacentMines()
+		{
+			for (int rowPosition = 0; rowPosition < GridSize; rowPosition++)
+			{
+				for (int columnPosition = 0; columnPosition < GridSize; columnPosition++)
+				{
+					if (Field[rowPosition, columnPosition].IsMine) continue;
 
-            // Print Grid
-            for (int i = 0; i < GridSize; i++)
-            {
-                Console.WriteLine();
-                Console.Write(ColumnHeaders[i] + " ");
-                for (int j = 0; j < GridSize; j++)
-                {
-                    Console.Write(Grid[i, j] + " ");
-                }
-            }
-        }
-
-        private void UpdateField()
-        {
-			for (int i = 0; i < GridSize; i++)
-            {
-				for (int j = 0; j < GridSize; j++)
-                {
-					if (Mines[i, j])
-                    {
-                        Grid[i, j] = '*';
+					int count = 0;
+					for (int dRow = -1; dRow <= 1; dRow++)
+					{
+						for (int dCol = -1; dCol <= 1; dCol++)
+						{
+							int newRowPosition = rowPosition + dRow;
+							int newColumnPosition = columnPosition + dCol;
+							if (IsValid(newRowPosition, newColumnPosition) && Field[newRowPosition, newColumnPosition].IsMine)
+								count++;
+						}
 					}
-					else
-                    {
-                        Grid[i, j] = ' ';
-					}
+
+					Field[rowPosition, columnPosition].AdjacentMines = count;
 				}
 			}
 		}
-        
-        public bool DigField(int rowPosition, int colPosition)
-        {
-            if (IsMine(rowPosition, colPosition))
-            {
-                return true;
-            }
 
-            return false;
-        }
+		public void Display()
+		{
+			Console.Write($"  {string.Join(" ", RowHeaders)}");
 
-        private bool IsMine(int rowPosition, int colPosition)
-        {
-            return Mines[rowPosition, colPosition];
-        }
-
-        private void PlantMines(int mineCount)
-        {
-			var random = new Random();
-			int plantedMines = 0;
-
-			while (plantedMines < mineCount)
+			for (int r = 0; r < GridSize; r++)
 			{
-				int colPosition = random.Next(GridSize);
-				int rowPosition = random.Next(GridSize);
+				Console.WriteLine();
+				Console.Write(ColumnHeaders[r] + " ");
 
-                var isMinePlanted = Mines[rowPosition, colPosition];
-				if (isMinePlanted)
+				for (int c = 0; c < GridSize; c++)
+				{
+					var cell = Field[r, c];
+					if (!cell.IsRevealed)
+						Console.Write("_ ");
+					else if (cell.IsMine)
+						Console.Write("_ ");
+					else if (cell.AdjacentMines == 0)
+						Console.Write("0 ");
+					else
+						Console.Write($"{cell.AdjacentMines} ");
+				}
+			}
+		}
+
+		public void InitializeBoard()
+		{
+			for (int rowPosition = 0; rowPosition < GridSize; rowPosition++)
+				for (int columnPosition = 0; columnPosition < GridSize; columnPosition++)
+					Field[rowPosition, columnPosition] = new FieldCell();
+		}
+
+		public void Uncover(int startRow, int startCol)
+		{
+			var queue = new Queue<(int, int)>();
+			queue.Enqueue((startRow, startCol));
+
+			while (queue.Count > 0)
+			{
+				var (row, col) = queue.Dequeue();
+
+				if (!IsValid(row, col))
 				{
 					continue;
 				}
 
-				Mines[rowPosition, colPosition] = true;
-				plantedMines++;
-            }
+				if (Field[row, col].IsRevealed || Field[row, col].IsMine)
+				{
+					continue;
+				}
+
+				Field[row, col].IsRevealed = true;
+
+				if (Field[row, col].AdjacentMines > 0)
+				{
+					continue;
+				}
+
+				for (int dRow = -1; dRow <= 1; dRow++)
+				{
+					for (int dCol = -1; dCol <= 1; dCol++)
+					{
+						if (dRow != 0 || dCol != 0)
+							queue.Enqueue((row + dRow, col + dCol));
+					}
+				}
+			}
 		}
 
-        private void InitializeGridMine()
-        {
-            for (int i = 0; i < GridSize; i++)
-            {
-                for (int j = 0; j < GridSize; j++)
-                {
-                    Grid[i, j] = '_';
-                    Mines[i, j] = false;
-                }
-            }
-        }
+		public void UpdateFieldGrid(int rowPosition, int colPosition, string value)
+		{
+			Grid[rowPosition, colPosition] = value;
+		}
 
-        private void InitializeHeaders(int gridSize)
-        {
-            for (int i = 0; i < gridSize; i++)
-            {
-                RowHeaders[i] = (i + 1).ToString();
-                ColumnHeaders[i] = ((char)('A' + i)).ToString();
-            }
-        }
-    }
+		public bool IsWin()
+		{
+			for (int row = 0; row < GridSize; row++)
+			{
+				for (int column = 0; column < GridSize; column++)
+				{
+					if (!Field[row, column].IsMine && !Field[row, column].IsRevealed)
+						return false;
+				}
+			}
+
+			return true;
+		}
+
+		public bool IsMine(int rowPosition, int colPosition)
+		{
+			return Field[rowPosition, colPosition].IsMine;
+		}
+
+		private void InitializeHeaders(int gridSize)
+		{
+			for (int i = 0; i < gridSize; i++)
+			{
+				RowHeaders[i] = (i + 1).ToString();
+				ColumnHeaders[i] = ((char)('A' + i)).ToString();
+			}
+		}
+
+		private void InitializeGrid()
+		{
+			for (int i = 0; i < GridSize; i++)
+			{
+				for (int j = 0; j < GridSize; j++)
+				{
+					Grid[i, j] = "_";
+				}
+			}
+		}
+
+		public void PlaceMines()
+		{
+			var random = new Random();
+			int placed = 0;
+			while (placed < MineCount)
+			{
+				int colPosition = random.Next(GridSize);
+				int rowPosition = random.Next(GridSize);
+				if (!Field[rowPosition, colPosition].IsMine)
+				{
+					Field[rowPosition, colPosition].IsMine = true;
+					placed++;
+				}
+			}
+		}
+
+		private bool IsValid(int rowPosition, int columnPosition) => rowPosition >= 0 && rowPosition < GridSize && columnPosition >= 0 && columnPosition < GridSize;
+	}
 }
