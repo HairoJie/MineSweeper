@@ -7,4 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="MineSweeperTest\**" />
+    <EmbeddedResource Remove="MineSweeperTest\**" />
+    <None Remove="MineSweeperTest\**" />
+  </ItemGroup>
+
 </Project>
