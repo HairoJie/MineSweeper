@@ -34,12 +34,18 @@ namespace MineSweeper.Test.Visual
 			Assert.Equal(_mineField.MineCount, minesPlanted);
 		}
 
-		[Fact]
-		public void TestRevealField()
+		[Theory]
+		[InlineData(3, 3)]
+		[InlineData(1, 3)]
+		[InlineData(0, 0)]
+		public void TestRevealField(int rowPosition, int colPosition)
 		{
 			try
 			{
-				_mineField.Uncover(3, 3);
+				_mineField.Uncover(rowPosition, colPosition);
+
+				// Check if field is revaled
+				Assert.True(_mineField.Field[rowPosition, colPosition].IsRevealed);
 			}
 			catch (Exception)
 			{

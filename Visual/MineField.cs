@@ -42,6 +42,11 @@
 					if (Field[rowPosition, columnPosition].IsMine) continue;
 
 					int count = 0;
+
+					// Row delta and col delta
+					// We check all 8 surrounding cells
+					// Each cell is checked by adding the delta to the current cell's position
+					// Delta is the difference between the current cell and the surrounding cell
 					for (int dRow = -1; dRow <= 1; dRow++)
 					{
 						for (int dCol = -1; dCol <= 1; dCol++)
@@ -121,6 +126,37 @@
 					{
 						if (dRow != 0 || dCol != 0)
 							queue.Enqueue((row + dRow, col + dCol));
+					}
+				}
+			}
+		}
+
+		public void UncoverRecursive(int row, int col)
+		{
+			if (!IsValid(row, col))
+			{
+				return;
+			}
+
+			if (Field[row, col].IsRevealed || Field[row, col].IsMine)
+			{
+				return;
+			}
+
+			Field[row, col].IsRevealed = true;
+
+			if (Field[row, col].AdjacentMines > 0)
+			{
+				return;
+			}
+
+			for (int dRow = -1; dRow <= 1; dRow++)
+			{
+				for (int dCol = -1; dCol <= 1; dCol++)
+				{
+					if (dRow != 0 || dCol != 0)
+					{
+						Uncover(row + dRow, col + dCol);
 					}
 				}
 			}
