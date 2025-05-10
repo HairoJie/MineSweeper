@@ -21,8 +21,8 @@
 				}
 
 				Console.WriteLine("Enter the number of mines to place on the grid (maximum is 35% of the total squares): ");
-				int mineCount;
-				while (!int.TryParse(Console.ReadLine(), out mineCount) || mineCount < 1 || mineCount >= gridSize * gridSize)
+				double mineCount;
+				while (!double.TryParse(Console.ReadLine(), out mineCount) || mineCount < 1 || mineCount >= gridSize * gridSize)
 				{
 					Console.WriteLine("Invalid input. Please enter a positive integer less than the total number of cells.");
 				}

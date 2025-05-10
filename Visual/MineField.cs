@@ -8,10 +8,12 @@
 
 		private readonly string[] RowHeaders;
 
-		public MineField(int gridSize, int mineCount)
+		public MineField(int gridSize, double mineCount)
 		{
 			GridSize = gridSize;
-			MineCount = mineCount;
+
+			MineCount = Convert.ToInt32(Math.Round(mineCount));
+
 			Grid = new string[gridSize, gridSize];
 
 			RowHeaders = new string[gridSize];
@@ -24,7 +26,7 @@
 			InitializeGrid();
 
 			PlaceMines();
-			CalculateAdjacentMines();
+			//CalculateAdjacentMines();
 		}
 
 		public FieldCell[,] Field { get; }
@@ -174,10 +176,61 @@
 		{
 			var random = new Random();
 			int placed = 0;
+			int attempts = 0;
 			while (placed < MineCount)
 			{
 				int colPosition = random.Next(GridSize);
 				int rowPosition = random.Next(GridSize);
+
+				attempts++;
+
+				if (attempts > GridSize * GridSize)
+				{
+					break;
+				}
+
+				bool canPlaceMine = true;
+
+				// Check adjacent mines
+				for (int dRow = -1; dRow <= 1; dRow++)
+				{
+					for (int dCol = -1; dCol <= 1; dCol++)
+					{
+						var newRowPosition = rowPosition + dRow;
+						var newColumnPosition = colPosition + dCol;
+
+						if (IsValid(newRowPosition, newColumnPosition) && Field[newRowPosition, newColumnPosition].IsMine)
+							Field[rowPosition, colPosition].AdjacentMines++;
+					}
+				}
+
+				// Check if adjacent cells have 3 or more mines
+				for (int dRow = -1; dRow <= 1; dRow++)
+				{
+					for (int dCol = -1; dCol <= 1; dCol++)
+					{
+						var newRowPosition = rowPosition + dRow;
+						var newColumnPosition = colPosition + dCol;
+
+						if (IsValid(newRowPosition, newColumnPosition) && Field[newRowPosition, newColumnPosition].AdjacentMines >= 3)
+						{
+							canPlaceMine = false;
+							break;
+						}
+
+					}
+
+					if (!canPlaceMine)
+					{
+						break;
+					}	
+				}
+
+				if (!canPlaceMine)
+				{
+					continue;
+				}
+
 				if (!Field[rowPosition, colPosition].IsMine)
 				{
 					Field[rowPosition, colPosition].IsMine = true;
